@@ -1,0 +1,12 @@
+language: java
+
+install: echo "My projects will be configurable in an awesomical way ;)."
+
+# don't just run the tests, also run Findbugs and friends.
+script: mvn clean verify
+
+jdk:
+  - oraclejdk8
+
+after_success:
+  - mvn clean test jacoco:report coveralls:report
