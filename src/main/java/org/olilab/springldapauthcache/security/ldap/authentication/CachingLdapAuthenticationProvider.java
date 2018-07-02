@@ -31,6 +31,7 @@ import org.springframework.util.StringUtils;
  * @since 1.0.0
  */
 
+//tag::code[]
 @Slf4j
 @Setter
 public class CachingLdapAuthenticationProvider extends LdapAuthenticationProvider {
@@ -90,3 +91,5 @@ public class CachingLdapAuthenticationProvider extends LdapAuthenticationProvide
 
 
 }
+
+//end::code[]

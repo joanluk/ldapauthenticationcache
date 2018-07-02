@@ -1,0 +1,47 @@
+image:https://travis-ci.org/joanluk/ldapauthenticationcache.svg?branch=master["Build Status", link="https://travis-ci.org/joanluk/ldapauthenticationcache"]
+
+[![Build Status](https://travis-ci.org/joanluk/ldapauthenticationcache.svg?branch=master)](https://travis-ci.org/joanluk/ldapauthenticationcache)
+
+
+# API Rest con seguridad básica contra LDAP y caché
+
+
+Spring Security ofrece varios proveedores de seguridad (LDAP, Base de datos, etc). En alguno de ellos ofrece un mecanismo de
+caché que permite guardar en una caché interna y durante un período de tiempo pequeño, usuarios y roles con el objetivo
+de mejorar el rendimiento en las ejecuciones.
+
+Esta mejora es útil para servicios REST, los cuales deben ser por normal stateless. En aplicaciones web con mecanismos
+de sesión, el usuario logado se guarda en dicha sesión por lo que las ejecuciones suscesivas no es necesario volver a consultar.
+
+Sin embargo, en ejecuciones de API´s sin estado, puede llegar a ser un problema si el acceso al repositorio con la información
+del usuario y roles penaliza.
+
+Como indicaba, Spring Security para algunos provider ofrece mecanismo de caché. Por ejemplo para el **DAOAuthenticationProvider** se ofrece la posibilidad de definir un elemento cacheUser
+
+[source,java]
+----
+	public abstract class AbstractUserDetailsAuthenticationProvider implements
+			AuthenticationProvider, InitializingBean, MessageSourceAware {
+
+		protected final Log logger = LogFactory.getLog(getClass());
+
+		// ~ Instance fields
+		// ================================================================================================
+		protected MessageSourceAccessor messages = SpringSecurityMessageSource.getAccessor();
+		private UserCache userCache = new NullUserCache();
+		private boolean forcePrincipalAsString = false;
+		protected boolean hideUserNotFoundExceptions = true;
+		private UserDetailsChecker preAuthenticationChecks = new DefaultPreAuthenticationChecks();
+		private UserDetailsChecker postAuthenticationChecks = new DefaultPostAuthenticationChecks();
+		private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
+----
+
+Sin embargo, para el acceso a LDAP no se ofrece esta posibilidad. Es por ello que este ejemplo trata de incluir un posible implementación de un provider basado en LDAPAuthenticationProvider
+que permite cachear usuarios y roles.
+
+La clase que se ha creado es  **CachingLdapAuthenticationProvider**
+
+[source,java]
+----
+include::src/main/java/org/olilab/springldapauthcache/security/ldap/authentication/CachingLdapAuthenticationProvider.java[tags=code]
+----
