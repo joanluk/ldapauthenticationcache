@@ -41,5 +41,5 @@ La clase que se ha creado es  **CachingLdapAuthenticationProvider**
 
 [source,java]
 ----
-include::src/main/java/org/olilab/springldapauthcache/security/ldap/authentication/CachingLdapAuthenticationProvider.java[tags=code]
+include::{sourcedir}/org/olilab/springldapauthcache/security/ldap/authentication/CachingLdapAuthenticationProvider.java[]
 ----
