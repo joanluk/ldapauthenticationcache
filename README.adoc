@@ -41,5 +41,64 @@ La clase que se ha creado es  **CachingLdapAuthenticationProvider**
 
 [source,java]
 ----
-include::src/main/java/org/olilab/springldapauthcache/security/ldap/authentication/CachingLdapAuthenticationProvider.java[tags=code]
+//tag::code[]
+@Slf4j
+@Setter
+public class CachingLdapAuthenticationProvider extends LdapAuthenticationProvider {
+
+    private UserCache userCache = new NullUserCache();
+    
+    /**
+     * Create an instance with the supplied authenticator and authorities populator
+     * implementations.
+     *
+     * @param authenticator        the authentication strategy (bind, password comparison, etc)
+     *                             to be used by this provider for authenticating users.
+     * @param authoritiesPopulator the strategy for obtaining the authorities for a given
+     */
+    public CachingLdapAuthenticationProvider(LdapAuthenticator authenticator, LdapAuthoritiesPopulator authoritiesPopulator) {
+        super(authenticator, authoritiesPopulator);
+    }
+
+    public CachingLdapAuthenticationProvider(LdapAuthenticator authenticator) {
+        super(authenticator);
+    }
+
+
+    @Override
+    public Authentication authenticate(Authentication authentication)  {
+        String userName = authentication.getName();
+        UsernamePasswordAuthenticationToken userToken = (UsernamePasswordAuthenticationToken) authentication;
+        UserDetails userDetailsFromCache = userCache.getUserFromCache(userName);
+        if (userDetailsFromCache != null) {
+            additionalAuthenticationChecks(userDetailsFromCache, userToken);
+            return createSuccessfulAuthentication(userToken, userDetailsFromCache);
+        } else {
+            Authentication authenticationFromProvider = super.authenticate(authentication);
+            userCache.putUserInCache((UserDetails)authenticationFromProvider.getPrincipal());
+            return authenticationFromProvider;
+        }
+
+    }
+
+    protected void additionalAuthenticationChecks(UserDetails userDetails,
+                                                  UsernamePasswordAuthenticationToken authentication) {
+        if (StringUtils.isEmpty(authentication.getCredentials())) {
+            logger.debug("Authentication failed: no credentials provided");
+
+            throw new BadCredentialsException(messages.getMessage(
+                    "AbstractUserDetailsAuthenticationProvider.badCredentials",
+                    "Bad credentials"));
+        }
+        String presentedPassword = authentication.getCredentials().toString();
+        if (!StringUtils.isEmpty(userDetails.getPassword()) && (!presentedPassword.equals(userDetails.getPassword()))) {
+            log.debug("Authentication failed: password does not match stored value");
+            throw new BadCredentialsException(messages.getMessage(
+                    "AbstractUserDetailsAuthenticationProvider.badCredentials",
+                    "Bad credentials"));
+        }
+    }
+
+
+}
 ----
